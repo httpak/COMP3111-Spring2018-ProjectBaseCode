@@ -9,13 +9,14 @@ For project related questions:
 
 ---
 **Question: JUnit testing involves javafx component**
+
 `act2`
 
 Unit testing should be done in non-GUI features (i.e. `core.comp3111` package). We don't need to run unit test on GUI related methods. 
 
 
 ---
-**Question: Any sample CSV file? How csv files be tested? **
+**Question: Any sample CSV file? How csv files be tested?**
 
 `act2` `feature1`
 
