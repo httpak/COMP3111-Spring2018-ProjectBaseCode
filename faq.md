@@ -8,6 +8,22 @@ For project related questions:
 - Email messages other than the above format will not be answered
 
 ---
+**Question: JUnit testing involves javafx component**
+`act2`
+
+Unit testing should be done in non-GUI features (i.e. `core.comp3111` package). We don't need to run unit test on GUI related methods. 
+
+
+---
+**Question: Any sample CSV file? How csv files be tested? **
+
+`act2` `feature1`
+
+You can use Microsoft Excel or related software to create a csv file. No sample csv file is provided (as we don't know which charts should be implemented by the teams).
+
+In the peer acceptance test in the last lab, another team will be assigned to test your team’s system. However, the csv files will be prepared by your team. The other team can’t create new csv files.
+
+---
 **Question: What is the difference between data filtering and data transformation? Do we need to pick one from each?**
 
 `act2` `feature5`
