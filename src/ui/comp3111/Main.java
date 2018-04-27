@@ -1,19 +1,29 @@
 package ui.comp3111;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.lang.Object;
+import org.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFileChooser;
+
 import core.comp3111.DataColumn;
 import core.comp3111.DataTable;
 import core.comp3111.DataType;
-import core.comp3111.SampleDataGenerator;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.chart.*;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -38,6 +48,10 @@ public class Main extends Application {
 	// Hint: Use java.util.List interface and its implementation classes (e.g.
 	// java.util.ArrayList)
 	private DataTable sampleDataTable = null;
+	private DataTable dataTable1 = new DataTable();
+	private DataTable dataTable2 = new DataTable();
+	private DataTable dataTable3 = new DataTable();
+	private int selectedDataTable = 1;
 
 	// Attributes: Scene and Stage
 	private static final int SCENE_NUM = 13;
@@ -68,8 +82,10 @@ public class Main extends Application {
 
 	// Screen 1: paneImportScreen
 	private Button btImportToDataset1,btImportToDataset2,btImportToDataset3;
+	private Button btImportBack;
 	// Screen 2: paneEmportScreen
 	private Button btExportDataset1,btExportDataset2,btExportDataset3;
+	private Button btExportBack;
 	// Screen 3: paneOperationScreen
 	private Button btFilterText, btFilterNum, btPlotLineChart, btPlotPieChart, btOperationBackMain;
 	private Label lbOperationScreenSampleDataTable, lbOperationScreenTitle, lbFilterData, lbPlotChart;
@@ -181,26 +197,37 @@ public class Main extends Application {
 //
 //		});
 		btDataset1.setOnAction(e -> {
-			// In this example, we invoke SampleDataGenerator to generate sample data
-			sampleDataTable = SampleDataGenerator.generateSampleLineData();
-			lbOperationScreenSampleDataTable.setText(String.format("Dataset1: %d rows, %d columns", sampleDataTable.getNumRow(),
-					sampleDataTable.getNumCol()));
-			lbSampleDataTable.setText(String.format("Dataset1: %d rows, %d columns", sampleDataTable.getNumRow(),
-					sampleDataTable.getNumCol()));
+			selectedDataTable = 1;
+			if(dataTable1 == null) {
+				return;
+			}
+			lbOperationScreenSampleDataTable.setText(String.format("Dataset 1: %d rows, %d columns", dataTable1.getNumRow(),
+					dataTable1.getNumCol()));
+			lbSampleDataTable.setText(String.format("Dataset 1: %d rows, %d columns", dataTable1.getNumRow(),
+					dataTable1.getNumCol()));
 		});
 		btDataset2.setOnAction(e -> {
-			// In this example, we invoke SampleDataGenerator to generate sample data
-			sampleDataTable = SampleDataGenerator.generateSampleLineDataV2();
-			lbOperationScreenSampleDataTable.setText(String.format("Dataset2: %d rows, %d columns", sampleDataTable.getNumRow(),
-					sampleDataTable.getNumCol()));
-			lbSampleDataTable.setText(String.format("Dataset2: %d rows, %d columns", sampleDataTable.getNumRow(),
-					sampleDataTable.getNumCol()));
+			selectedDataTable = 2;
+			if(dataTable2 == null) {
+				return;
+			}
+			lbOperationScreenSampleDataTable.setText(String.format("Dataset 2: %d rows, %d columns", dataTable2.getNumRow(),
+					dataTable2.getNumCol()));
+			lbSampleDataTable.setText(String.format("Dataset 2: %d rows, %d columns", dataTable2.getNumRow(),
+					dataTable2.getNumCol()));
 		});
-//		btDataset3.setOnAction(e -> {
-//			
-//		});
+		btDataset3.setOnAction(e -> {
+			selectedDataTable = 3;
+			if(dataTable3 == null) {
+				return;
+			}
+			lbOperationScreenSampleDataTable.setText(String.format("Dataset 3: %d rows, %d columns", dataTable3.getNumRow(),
+					dataTable3.getNumCol()));
+			lbSampleDataTable.setText(String.format("Dataset 3: %d rows, %d columns", dataTable3.getNumRow(),
+					dataTable3.getNumCol()));
+		});
 		btOperation.setOnAction(e -> {
-			if(sampleDataTable != null) {
+			if((selectedDataTable == 1 && dataTable1 != null) || (selectedDataTable == 2 && dataTable2 != null) || (selectedDataTable == 3 && dataTable3 != null) ) {
 				putSceneOnStage(SCENE_OPERATION_SCREEN);
 			}
 			else{
@@ -219,7 +246,183 @@ public class Main extends Application {
 	}
 
 	private void initImportScreenHandlers() {
-		
+		btImportToDataset1.setOnAction(e -> {
+			JFileChooser fileChooser = new JFileChooser();
+			File selectedFile;
+			String path;
+			int returnValue = fileChooser.showOpenDialog(null);
+			if(returnValue == JFileChooser.APPROVE_OPTION) {
+				selectedFile = fileChooser.getSelectedFile();
+			}else {
+				return;
+			}
+			try {
+				BufferedReader br = null;
+				String line = "";
+				String csvSplitBy = ",";
+				path = selectedFile.getAbsolutePath();
+				br = new BufferedReader(new FileReader(path));
+				List<String[]> csvList = new ArrayList<String[]>();
+				while((line = br.readLine()) != null) {
+					String[] temp = line.split(csvSplitBy, -1);
+					for(int i = 0; i < temp.length; i++) {
+						if(temp[i].equals("")||temp[i].equals(null)) {
+							temp[i] = "0";
+						}
+					}
+					csvList.add(temp);
+				}
+				br.close();
+				if(csvList.size() == 0) {
+					return;
+				}else {
+					for(int j = 0; j < csvList.get(csvList.size() - 1).length; j++) {
+						boolean isNumber = true;
+						for(int i = 1; i < csvList.size(); i++) {
+							if(!StringUtils.isNumeric(csvList.get(i)[j])) {
+								isNumber = false;
+							}
+						}
+						if(isNumber) {
+							Number[] tempNumberList = new Number[csvList.size() - 1];
+							for(int k = 0; k < tempNumberList.length; k++) {
+								tempNumberList[k] = Integer.parseInt(csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_NUMBER, tempNumberList);
+							dataTable1.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}else {
+							String[] tempStringList = new String[csvList.size() - 1];
+							for(int k = 0; k < tempStringList.length; k++) {
+								tempStringList[k] = (csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_STRING, tempStringList);
+							dataTable1.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}
+					}
+				}
+			}catch(Exception e1) {
+				e1.printStackTrace();
+			}
+		});
+		btImportToDataset2.setOnAction(e -> {
+			JFileChooser fileChooser = new JFileChooser();
+			File selectedFile;
+			String path;
+			int returnValue = fileChooser.showOpenDialog(null);
+			if(returnValue == JFileChooser.APPROVE_OPTION) {
+				selectedFile = fileChooser.getSelectedFile();
+			}else {
+				return;
+			}
+			try {
+				BufferedReader br = null;
+				String line = "";
+				String csvSplitBy = ",";
+				path = selectedFile.getAbsolutePath();
+				br = new BufferedReader(new FileReader(path));
+				List<String[]> csvList = new ArrayList<String[]>();
+				while((line = br.readLine()) != null) {
+					String[] temp = line.split(csvSplitBy, -1);
+					for(int i = 0; i < temp.length; i++) {
+						if(temp[i].equals("")||temp[i].equals(null)) {
+							temp[i] = "0";
+						}
+					}
+					csvList.add(temp);
+				}
+				br.close();
+				if(csvList.size() == 0) {
+					return;
+				}else {
+					for(int j = 0; j < csvList.get(csvList.size() - 1).length; j++) {
+						boolean isNumber = true;
+						for(int i = 1; i < csvList.size(); i++) {
+							if(!StringUtils.isNumeric(csvList.get(i)[j])) {
+								isNumber = false;
+							}
+						}
+						if(isNumber) {
+							Number[] tempNumberList = new Number[csvList.size() - 1];
+							for(int k = 0; k < tempNumberList.length; k++) {
+								tempNumberList[k] = Integer.parseInt(csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_NUMBER, tempNumberList);
+							dataTable2.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}else {
+							String[] tempStringList = new String[csvList.size() - 1];
+							for(int k = 0; k < tempStringList.length; k++) {
+								tempStringList[k] = (csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_STRING, tempStringList);
+							dataTable2.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}
+					}
+				}
+			}catch(Exception e1) {
+				e1.printStackTrace();
+			}
+		});
+		btImportToDataset3.setOnAction(e -> {
+			JFileChooser fileChooser = new JFileChooser();
+			File selectedFile;
+			String path;
+			int returnValue = fileChooser.showOpenDialog(null);
+			if(returnValue == JFileChooser.APPROVE_OPTION) {
+				selectedFile = fileChooser.getSelectedFile();
+			}else {
+				return;
+			}
+			try {
+				BufferedReader br = null;
+				String line = "";
+				String csvSplitBy = ",";
+				path = selectedFile.getAbsolutePath();
+				br = new BufferedReader(new FileReader(path));
+				List<String[]> csvList = new ArrayList<String[]>();
+				while((line = br.readLine()) != null) {
+					String[] temp = line.split(csvSplitBy, -1);
+					for(int i = 0; i < temp.length; i++) {
+						if(temp[i].equals("")||temp[i].equals(null)) {
+							temp[i] = "0";
+						}
+					}
+					csvList.add(temp);
+				}
+				br.close();
+				if(csvList.size() == 0) {
+					return;
+				}else {
+					for(int j = 0; j < csvList.get(csvList.size() - 1).length; j++) {
+						boolean isNumber = true;
+						for(int i = 1; i < csvList.size(); i++) {
+							if(!StringUtils.isNumeric(csvList.get(i)[j])) {
+								isNumber = false;
+							}
+						}
+						if(isNumber) {
+							Number[] tempNumberList = new Number[csvList.size() - 1];
+							for(int k = 0; k < tempNumberList.length; k++) {
+								tempNumberList[k] = Integer.parseInt(csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_NUMBER, tempNumberList);
+							dataTable3.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}else {
+							String[] tempStringList = new String[csvList.size() - 1];
+							for(int k = 0; k < tempStringList.length; k++) {
+								tempStringList[k] = (csvList.get(k + 1)[j]);
+							}
+							DataColumn tempColumn = new DataColumn(DataType.TYPE_STRING, tempStringList);
+							dataTable3.addCol(csvList.get(0)[j].toString(), tempColumn);
+						}
+					}
+				}
+			}catch(Exception e1) {
+				e1.printStackTrace();
+			}
+		});
+		btImportBack.setOnAction(e -> {
+			putSceneOnStage(SCENE_MAIN_SCREEN);
+		});
 	}
 
 	private void initExportScreenHandlers() {
@@ -254,17 +457,38 @@ public class Main extends Application {
 
 	private void initLineChartSelectionNum1ScreenHandlers() {
 		btLineChartSelectionNum1back.setOnAction(e -> {
+			lbLineChartSelectionNum1.setText("Attribute: empty");
 			putSceneOnStage(SCENE_OPERATION_SCREEN);
 		});
 		btLineChartSelectionNum1continue.setOnAction(e -> {
 			lineChartSelectionNum1input = tfLineChartSelectionNum1.getText();
-			if(sampleDataTable.containsColumn(lineChartSelectionNum1input)==true &&
-					sampleDataTable.getCol(lineChartSelectionNum1input).getTypeName().equals(DataType.TYPE_NUMBER)) {
-				putSceneOnStage(SCENE_LINE_CHART_SELECTION_NUM2_SCREEN);
+			if(selectedDataTable == 1) {
+				if(dataTable1.containsColumn(lineChartSelectionNum1input)==true &&
+						dataTable1.getCol(lineChartSelectionNum1input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					sampleDataTable = dataTable1;
+					putSceneOnStage(SCENE_LINE_CHART_SELECTION_NUM2_SCREEN);
+				}
+				else {
+					lbLineChartSelectionNum1.setText("Error: Invalid input");
+				}
+			}else if(selectedDataTable == 2) {
+				if(dataTable2.containsColumn(lineChartSelectionNum1input)==true &&
+						dataTable2.getCol(lineChartSelectionNum1input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					putSceneOnStage(SCENE_LINE_CHART_SELECTION_NUM2_SCREEN);
+				}
+				else {
+					lbLineChartSelectionNum1.setText("Error: Invalid input");
+				}				
+			}else if(selectedDataTable == 3) {
+				if(dataTable3.containsColumn(lineChartSelectionNum1input)==true &&
+						dataTable3.getCol(lineChartSelectionNum1input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					putSceneOnStage(SCENE_LINE_CHART_SELECTION_NUM2_SCREEN);
+				}
+				else {
+					lbLineChartSelectionNum1.setText("Error: Invalid input");
+				}		
 			}
-			else {
-				lbLineChartSelectionNum1.setText("Error: Invalid input");
-			}
+			
 		});
 	}
 
@@ -282,19 +506,49 @@ public class Main extends Application {
 			if((lineChartSelectionNum2input.equals(lineChartSelectionNum1input))) {
 				checkNotEqualAttitube = false;
 			}
-			if(checkNotEqualAttitube && sampleDataTable.containsColumn(lineChartSelectionNum2input)==true && 
-					sampleDataTable.getCol(lineChartSelectionNum2input).getTypeName().equals(DataType.TYPE_NUMBER)) {
-				populateSampleDataTableValuesToLineChart("Line Chart");
-				putSceneOnStage(SCENE_LINE_CHART_SCREEN);
-			}
-			else {
-				if(!checkNotEqualAttitube) {
-					lbLineChartSelectionNum2.setText("Error: selected attitube should not equal to the previous one");
+			if(selectedDataTable == 1) {
+				if(checkNotEqualAttitube && dataTable1.containsColumn(lineChartSelectionNum2input)==true && 
+						dataTable1.getCol(lineChartSelectionNum2input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					populateSampleDataTableValuesToLineChart("Line Chart");
+					putSceneOnStage(SCENE_LINE_CHART_SCREEN);
 				}
 				else {
-					lbLineChartSelectionNum2.setText("Error: Invalid input");
+					if(!checkNotEqualAttitube) {
+						lbLineChartSelectionNum2.setText("Error: selected attitube should not equal to the previous one");
+					}
+					else {
+						lbLineChartSelectionNum2.setText("Error: Invalid input");
+					}
 				}
-			}
+			}else if(selectedDataTable == 2) {
+				if(checkNotEqualAttitube && dataTable2.containsColumn(lineChartSelectionNum2input)==true && 
+						dataTable2.getCol(lineChartSelectionNum2input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					populateSampleDataTableValuesToLineChart("Line Chart");
+					putSceneOnStage(SCENE_LINE_CHART_SCREEN);
+				}
+				else {
+					if(!checkNotEqualAttitube) {
+						lbLineChartSelectionNum2.setText("Error: selected attitube should not equal to the previous one");
+					}
+					else {
+						lbLineChartSelectionNum2.setText("Error: Invalid input");
+					}
+				}				
+			}else if(selectedDataTable == 3) {
+				if(checkNotEqualAttitube && dataTable3.containsColumn(lineChartSelectionNum2input)==true && 
+						dataTable3.getCol(lineChartSelectionNum2input).getTypeName().equals(DataType.TYPE_NUMBER)) {
+					populateSampleDataTableValuesToLineChart("Line Chart");
+					putSceneOnStage(SCENE_LINE_CHART_SCREEN);
+				}
+				else {
+					if(!checkNotEqualAttitube) {
+						lbLineChartSelectionNum2.setText("Error: selected attitube should not equal to the previous one");
+					}
+					else {
+						lbLineChartSelectionNum2.setText("Error: Invalid input");
+					}
+				}		
+			}			
 		});
 	}
 
@@ -339,7 +593,7 @@ public class Main extends Application {
 			}
 			else {
 				if(!checkNegValue) {
-					lbPieChartSelectionNum.setText("Error: numbers in selected attibute should not be negative");
+					lbPieChartSelectionNum.setText("Error: numbers in selected attribute should not be negative");
 				}
 				else {
 					lbPieChartSelectionNum.setText("Error: Invalid input");
@@ -426,20 +680,25 @@ public class Main extends Application {
 		btImportToDataset1=new Button("Import to dataset1");
 		btImportToDataset2=new Button("Import to dataset2");
 		btImportToDataset3=new Button("Import to dataset3");
+		btImportBack=new Button("Back");
 		
 		HBox I1=new HBox(20);
 		I1.setAlignment(Pos.CENTER);
 		I1.getChildren().addAll(btImportToDataset1, btImportToDataset2,btImportToDataset3);
 		
+		HBox mi = new HBox(20);
+		mi.setAlignment(Pos.CENTER);
+		mi.getChildren().addAll(btImportBack);
+		
 		VBox container = new VBox(20);
-		container.getChildren().addAll(I1);
+		container.getChildren().addAll(I1, mi);
 		container.setAlignment(Pos.CENTER);
 		
 		BorderPane pane = new BorderPane();//delete it when edit
 		pane.setCenter(container);
 		
-		lbOperationScreenTitle.getStyleClass().add("menu-title");
-	pane.getStyleClass().add("screen-background");
+		//lbOperationScreenTitle.getStyleClass().add("menu-title");
+		pane.getStyleClass().add("screen-background");
 		
 		return pane;//delete it when edit
 	}
@@ -479,7 +738,7 @@ public class Main extends Application {
 		BorderPane pane = new BorderPane();
 		pane.setCenter(container);
 
-		lbOperationScreenTitle.getStyleClass().add("menu-title");
+		//lbOperationScreenTitle.getStyleClass().add("menu-title");
 		pane.getStyleClass().add("screen-background");
 		
 		return pane;
@@ -501,9 +760,9 @@ public class Main extends Application {
 	private Pane paneLineChartSelectionNum1Screen() {
 		btLineChartSelectionNum1continue = new Button("continue");
 		btLineChartSelectionNum1back = new Button("back");
-		lbLineChartSelectionNum1ScreenTitle = new Label("Input attibute name for x-axis");
+		lbLineChartSelectionNum1ScreenTitle = new Label("Input attribute name for x-axis");
 		lbLineChartSelectionNum1Name = new Label("Name:"); 
-		lbLineChartSelectionNum1 = new Label("Attibute: empty");
+		lbLineChartSelectionNum1 = new Label("attribute: empty");
 		
 		tfLineChartSelectionNum1 = new TextField();
 				
@@ -531,9 +790,9 @@ public class Main extends Application {
 	private Pane paneLineChartSelectionNum2Screen() {
 		btLineChartSelectionNum2continue = new Button("continue");
 		btLineChartSelectionNum2back = new Button("back");
-		lbLineChartSelectionNum2ScreenTitle = new Label("Input attibute name for y-axis");
+		lbLineChartSelectionNum2ScreenTitle = new Label("Input attribute name for y-axis");
 		lbLineChartSelectionNum2Name = new Label("Name:"); 
-		lbLineChartSelectionNum2 = new Label("Attibute: empty");
+		lbLineChartSelectionNum2 = new Label("attribute: empty");
 		lbLineChartSelectionTitle = new Label("(Optional)Name Chart Title");
 		lbLineChartSelectionTitleName = new Label("Name:");
 		
@@ -571,9 +830,9 @@ public class Main extends Application {
 	private Pane panePieChartSelectionTextScreen() {
 		btPieChartSelectionTextcontinue = new Button("continue");
 		btPieChartSelectionTextback = new Button("back");
-		lbPieChartSelectionTextScreenTitle = new Label("Input attibute name for Label");
+		lbPieChartSelectionTextScreenTitle = new Label("Input attribute name for Label");
 		lbPieChartSelectionTextName = new Label("Name:"); 
-		lbPieChartSelectionText = new Label("Attibute: empty");
+		lbPieChartSelectionText = new Label("attribute: empty");
 		
 		tfPieChartSelectionText = new TextField();
 		
@@ -603,9 +862,9 @@ public class Main extends Application {
 	private Pane panePieChartSelectionNumScreen() {
 		btPieChartSelectionNumcontinue = new Button("continue");
 		btPieChartSelectionNumback = new Button("back");
-		lbPieChartSelectionNumScreenTitle = new Label("Input attibute name for value");
+		lbPieChartSelectionNumScreenTitle = new Label("Input attribute name for value");
 		lbPieChartSelectionNumName = new Label("Name:"); 
-		lbPieChartSelectionNum = new Label("Attibute: empty");
+		lbPieChartSelectionNum = new Label("attribute: empty");
 		lbPieChartSelectionTitle = new Label("(Optional)Name Chart Title");
 		lbPieChartSelectionTitleName = new Label("Name:");
 		
